@@ -17,6 +17,10 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     header
+                    
+                    // Motivational cat quote
+                    CatQuote()
+                    
                     balanceCard
                     todayTasks
                     recentActivity
@@ -41,7 +45,7 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Image(systemName: "face.smiling.fill")
+            Image(systemName: "cat.fill")
                 .font(.title)
                 .foregroundStyle(.white)
                 .padding(12)
@@ -52,7 +56,7 @@ struct HomeView: View {
                 Text("Hi, \(viewModel.kidName)!")
                     .font(.title3).bold()
                     .foregroundStyle(.white)
-                Text("Track your pocket money")
+                Text("Your purr-fect money tracker 🐾")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.8))
             }
@@ -60,7 +64,7 @@ struct HomeView: View {
             Spacer()
 
             Button(action: { showAddTransaction = true }) {
-                Image(systemName: "plus")
+                Image(systemName: "pawprint.fill")
                     .font(.title3).bold()
                     .foregroundStyle(Color.OceanBlue)
                     .padding(10)
@@ -77,16 +81,21 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("My balance")
-                        .font(.headline)
-                        .foregroundStyle(.white.opacity(0.9))
+                    HStack(spacing: 8) {
+                        Text("My balance 🐱")
+                            .font(.headline)
+                            .foregroundStyle(.white.opacity(0.9))
+                        Spacer()
+                        // Cute sleeping cat decoration
+                        CatDecoration(style: .sleeping, size: 30, color: .white.opacity(0.7))
+                    }
                     Text(viewModel.balanceText)
                         .font(.system(size: 38, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    Label("Goal: $120", systemImage: "target")
+                    Label("Goal: $120", systemImage: "flag.checkered")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.9))
                     ProgressView(value: viewModel.balance / 120)
@@ -125,7 +134,7 @@ struct HomeView: View {
 
     private var rulesCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Allowance rules")
+            Text("Allowance rules 😻")
                 .font(.headline)
                 .foregroundStyle(Color.Ink)
             HStack(spacing: 12) {
@@ -174,13 +183,18 @@ struct HomeView: View {
     private var todayTasks: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Today's quests")
+                Text("Today's quests 🐾")
                     .font(.headline)
                     .foregroundStyle(Color.Ink)
                 Spacer()
-                Text("Fun and easy")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Text("Meow-velous tasks!")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "cat.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             VStack(spacing: 12) {
@@ -214,17 +228,38 @@ struct HomeView: View {
     private var recentActivity: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Activity")
+                Text("Activity 📖")
                     .font(.headline)
                     .foregroundStyle(Color.Ink)
                 Spacer()
-                Text("This week")
+                Text("This week 🐾")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
-            ForEach(viewModel.transactions) { transaction in
-                TransactionRow(transaction: transaction)
+            if viewModel.transactions.isEmpty {
+                // Cute empty state
+                VStack(spacing: 16) {
+                    CatDecoration(style: .sleeping, size: 60, color: .OceanBlue.opacity(0.5))
+                    
+                    Text("No activity yet")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    
+                    Text("Complete quests to see your meow-velous progress here! 🐱")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    PawPrintsTrail(count: 5, color: .OceanBlue.opacity(0.3), spacing: 8)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+            } else {
+                ForEach(viewModel.transactions) { transaction in
+                    TransactionRow(transaction: transaction)
+                }
             }
         }
         .padding(16)
@@ -242,7 +277,7 @@ struct HomeView: View {
                 Circle()
                     .fill(tint.opacity(0.18))
                     .frame(width: 42, height: 42)
-                Image(systemName: completed ? "checkmark.seal.fill" : "sparkles")
+                Image(systemName: completed ? "checkmark.seal.fill" : "pawprint.circle")
                     .foregroundStyle(tint)
                     .font(.title3)
             }
@@ -283,11 +318,17 @@ struct ConfettiView: View {
                     let angle = Angle.degrees(Double.random(in: 0...360))
                     copy.translateBy(x: x, y: y)
                     copy.rotate(by: angle)
-                    let rect = CGRect(x: -2, y: -6, width: 4, height: 12)
-                    copy.fill(
-                        Rectangle().path(in: rect),
-                        with: .color(randomColor(index: index))
-                    )
+                    
+                    // Mix of shapes: hearts for cats, paw prints, and rectangles
+                    if index % 3 == 0 {
+                        // Draw a simple paw shape
+                        let rect = CGRect(x: -3, y: -3, width: 6, height: 6)
+                        copy.fill(Circle().path(in: rect), with: .color(randomColor(index: index)))
+                    } else {
+                        // Regular confetti rectangle
+                        let rect = CGRect(x: -2, y: -6, width: 4, height: 12)
+                        copy.fill(Rectangle().path(in: rect), with: .color(randomColor(index: index)))
+                    }
                 }
             }
         }
@@ -295,7 +336,7 @@ struct ConfettiView: View {
     }
 
     private func randomColor(index: Int) -> Color {
-        let palette: [Color] = [.pink, .yellow, .mint, .blue, .orange, .purple]
+        let palette: [Color] = [.pink, .yellow, .mint, .blue, .orange, .purple, .cyan]
         return palette[index % palette.count]
     }
 }

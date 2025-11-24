@@ -70,10 +70,10 @@ final class DashboardViewModel: ObservableObject {
             if todayCompleted < todayTotal {
                 todayCompleted += 1
                 
-                // Add transaction
+                // Add transaction with cat-themed subtitle
                 addTransaction(
                     title: title,
-                    subtitle: "Quest completed!",
+                    subtitle: "Purr-fect! Quest completed! 🐾",
                     amount: amount,
                     type: .income,
                     tintName: tintName
