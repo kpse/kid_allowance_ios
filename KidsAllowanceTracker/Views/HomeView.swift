@@ -3,6 +3,8 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject private var viewModel: DashboardViewModel
 
+    @State private var showAddTransaction = false
+
     var body: some View {
         ZStack(alignment: .top) {
             LinearGradient(
@@ -32,6 +34,9 @@ struct HomeView: View {
                     .offset(y: 40)
             }
         }
+        .sheet(isPresented: $showAddTransaction) {
+            AddTransactionView()
+        }
         .navigationBarHidden(true)
     }
 
@@ -55,7 +60,7 @@ struct HomeView: View {
 
             Spacer()
 
-            Button(action: viewModel.addSampleExpense) {
+            Button(action: { showAddTransaction = true }) {
                 Image(systemName: "plus")
                     .font(.title3).bold()
                     .foregroundStyle(Color.OceanBlue)
@@ -92,9 +97,23 @@ struct HomeView: View {
             }
 
             HStack(spacing: 12) {
-                ActionPill(title: "Add income", systemImage: "arrow.down.circle.fill", tint: .Mint)
-                ActionPill(title: "Add spending", systemImage: "arrow.up.circle.fill", tint: .Sunset)
-                ActionPill(title: "Set reminder", systemImage: "alarm.fill", tint: .Lavender)
+                Button {
+                    showAddTransaction = true
+                } label: {
+                    ActionPill(title: "Add income", systemImage: "arrow.down.circle.fill", tint: .Mint)
+                }
+                
+                Button {
+                    showAddTransaction = true
+                } label: {
+                    ActionPill(title: "Add spending", systemImage: "arrow.up.circle.fill", tint: .Sunset)
+                }
+                
+                Button {
+                    // Reminder logic or just a placeholder
+                } label: {
+                    ActionPill(title: "Set reminder", systemImage: "alarm.fill", tint: .Lavender)
+                }
             }
         }
         .padding(20)
@@ -118,27 +137,32 @@ struct HomeView: View {
                 .foregroundStyle(Color.Ink)
             HStack(spacing: 12) {
                 ForEach(viewModel.incomeRules) { rule in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Image(systemName: rule.icon)
-                            .font(.title2)
-                            .foregroundStyle(.white)
-                            .padding(10)
-                            .background(rule.tint)
-                            .clipShape(Circle())
-                        Text(rule.title)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.Ink)
-                        Text(rule.reward)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                    Button {
+                        // Optional: Could trigger quick add for these rules too, but "Today's quests" handles it better.
+                        // For now, let's just show details or do nothing.
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Image(systemName: rule.icon)
+                                .font(.title2)
+                                .foregroundStyle(.white)
+                                .padding(10)
+                                .background(rule.tint)
+                                .clipShape(Circle())
+                            Text(rule.title)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.Ink)
+                            Text(rule.reward)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.white)
+                                .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 6)
+                        )
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.white)
-                            .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 6)
-                    )
                 }
             }
         }
@@ -162,9 +186,7 @@ struct HomeView: View {
                         .foregroundStyle(.secondary)
                 }
                 Button {
-                    withAnimation {
-                        viewModel.todayCompleted = min(viewModel.todayCompleted + 1, viewModel.todayTotal)
-                    }
+                    // Manual check off if needed, but quests below handle it
                 } label: {
                     Label("Check off a task", systemImage: "checkmark.circle.fill")
                         .font(.subheadline.weight(.bold))
@@ -216,8 +238,22 @@ struct HomeView: View {
             }
 
             VStack(spacing: 12) {
-                questRow(title: "Bike to school", reward: "+$5", completed: viewModel.todayCompleted >= 1, tint: .OceanBlue)
-                questRow(title: "All homework A", reward: "+$5", completed: viewModel.todayCompleted >= 2, tint: .Mint)
+                Button {
+                    viewModel.completeQuest(title: "Bike to school", amount: 5, tintName: "OceanBlue")
+                } label: {
+                    questRow(title: "Bike to school", reward: "+$5", completed: viewModel.todayCompleted >= 1, tint: .OceanBlue)
+                }
+                .disabled(viewModel.todayCompleted >= 1) // Simple logic: disable if already done enough tasks? Or just let them click.
+                // Actually, logic in ViewModel prevents > total. But let's just disable if this specific one is "done" conceptually.
+                // Since we don't track *which* quest is done, just count, we'll just leave it enabled until total is reached or similar.
+                // For better UX, let's just let them click and see confetti if count < total.
+                
+                Button {
+                    viewModel.completeQuest(title: "All homework A", amount: 5, tintName: "Mint")
+                } label: {
+                    questRow(title: "All homework A", reward: "+$5", completed: viewModel.todayCompleted >= 2, tint: .Mint)
+                }
+                
                 questRow(title: "Room tidy bonus", reward: "+$2", completed: false, tint: .Lavender)
             }
         }

@@ -3,18 +3,28 @@ import SwiftUI
 
 final class DashboardViewModel: ObservableObject {
     @Published var kidName: String = "Mia"
-    @Published var balance: Double = 87
-    @Published var streakDays: Int = 4
-    @Published var todayCompleted: Int = 1
+    @Published var balance: Double = 0
+    @Published var streakDays: Int = 0
+    @Published var todayCompleted: Int = 0
     @Published var todayTotal: Int = 2
     @Published var showConfetti: Bool = false
 
-    @Published var transactions: [Transaction] = Transaction.sample
+    @Published var transactions: [Transaction] = []
+
+    private let defaults = UserDefaults.standard
+    private let transactionsKey = "savedTransactions"
+    private let balanceKey = "savedBalance"
+    private let todayCompletedKey = "savedTodayCompleted"
+    private let streakKey = "savedStreak"
+
+    init() {
+        loadData()
+    }
 
     var incomeRules: [IncomeRule] {
         [
-            IncomeRule(title: "Bike to school", reward: "+$5/day", icon: "bicycle", tint: .OceanBlue),
-            IncomeRule(title: "All-A homework", reward: "+$5/week", icon: "checkmark.seal.fill", tint: .Mint)
+            IncomeRule(title: "Bike to school", reward: "+$5/day", icon: "bicycle", tint: .OceanBlue, amount: 5),
+            IncomeRule(title: "All-A homework", reward: "+$5/week", icon: "checkmark.seal.fill", tint: .Mint, amount: 5)
         ]
     }
 
@@ -30,23 +40,94 @@ final class DashboardViewModel: ObservableObject {
         return formatter.string(from: NSNumber(value: balance)) ?? "$0"
     }
 
-    func addSampleExpense() {
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2)) {
-            let expense = Transaction(
-                title: "Comic Book",
-                subtitle: "Friendly fun",
-                date: .now,
-                amount: 9,
-                type: .expense,
-                accent: .Lavender
-            )
-            transactions.insert(expense, at: 0)
-            balance -= expense.amount
-            showConfetti = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                self.showConfetti = false
+    func addTransaction(title: String, subtitle: String, amount: Double, type: TransactionType, tintName: String) {
+        let transaction = Transaction(
+            title: title,
+            subtitle: subtitle,
+            date: Date(),
+            amount: amount,
+            type: type,
+            tintName: tintName
+        )
+        withAnimation {
+            transactions.insert(transaction, at: 0)
+            if type == .income {
+                balance += amount
+            } else {
+                balance -= amount
+            }
+            saveData()
+        }
+    }
+
+    func completeQuest(title: String, amount: Double, tintName: String) {
+        // Prevent duplicate completion for "Bike to school" if we wanted to be strict, but for now just let them add it.
+        // Actually, the UI shows a checkmark based on `todayCompleted`.
+        // Let's increment `todayCompleted` and add the transaction.
+        
+        withAnimation {
+            if todayCompleted < todayTotal {
+                todayCompleted += 1
+                
+                // Add transaction
+                addTransaction(
+                    title: title,
+                    subtitle: "Quest completed!",
+                    amount: amount,
+                    type: .income,
+                    tintName: tintName
+                )
+                
+                showConfetti = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.showConfetti = false
+                }
+                saveData()
             }
         }
+    }
+
+    func addSampleExpense() {
+        // Kept for backward compatibility or testing, but updated to use new addTransaction
+        addTransaction(
+            title: "Comic Book",
+            subtitle: "Friendly fun",
+            amount: 9,
+            type: .expense,
+            tintName: "Lavender"
+        )
+    }
+
+    private func saveData() {
+        if let encoded = try? JSONEncoder().encode(transactions) {
+            defaults.set(encoded, forKey: transactionsKey)
+        }
+        defaults.set(balance, forKey: balanceKey)
+        defaults.set(todayCompleted, forKey: todayCompletedKey)
+        defaults.set(streakDays, forKey: streakKey)
+    }
+
+    private func loadData() {
+        if let data = defaults.data(forKey: transactionsKey),
+           let decoded = try? JSONDecoder().decode([Transaction].self, from: data) {
+            transactions = decoded
+        } else {
+            transactions = Transaction.sample
+        }
+        
+        balance = defaults.double(forKey: balanceKey)
+        if balance == 0 && transactions.isEmpty {
+             // Initial state if needed, but let's stick to 0 or sample data logic
+             // If we loaded sample transactions, we should probably calculate balance from them or just set a default.
+             // For now, if no saved data, we use sample transactions. Let's calculate balance from sample.
+             if transactions.count == Transaction.sample.count {
+                 balance = 87 // Default from original code
+             }
+        }
+        
+        todayCompleted = defaults.integer(forKey: todayCompletedKey)
+        streakDays = defaults.integer(forKey: streakKey)
+        if streakDays == 0 { streakDays = 4 } // Default
     }
 }
 
@@ -56,4 +137,5 @@ struct IncomeRule: Identifiable {
     let reward: String
     let icon: String
     let tint: Color
+    let amount: Double
 }
