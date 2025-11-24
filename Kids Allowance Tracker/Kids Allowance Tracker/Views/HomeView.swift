@@ -45,12 +45,7 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Image(systemName: "cat.fill")
-                .font(.title)
-                .foregroundStyle(.white)
-                .padding(12)
-                .background(.white.opacity(0.2))
-                .clipShape(Circle())
+            EditableAvatarView(size: 60)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Hi, \(viewModel.kidName)!")
@@ -108,13 +103,13 @@ struct HomeView: View {
                 Button {
                     showAddTransaction = true
                 } label: {
-                    ActionPill(title: "Add income", systemImage: "arrow.down.circle.fill", tint: .Mint)
+                    ActionPill(title: "Add income", pawColor: .pink, tint: Color.pink.opacity(0.3), isUpward: true)
                 }
                 
                 Button {
                     showAddTransaction = true
                 } label: {
-                    ActionPill(title: "Add spending", systemImage: "arrow.up.circle.fill", tint: .Sunset)
+                    ActionPill(title: "Add spending", pawColor: .white, tint: Color.black.opacity(0.3), isUpward: false)
                 }
             }
         }

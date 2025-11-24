@@ -5,13 +5,20 @@ struct TransactionRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            // Use simple paw print with rotation
             ZStack {
                 Circle()
-                    .fill(transaction.accent.opacity(0.2))
+                    .fill(
+                        transaction.type == .income 
+                            ? Color.pink.opacity(0.15) 
+                            : Color.black.opacity(0.1)
+                    )
                     .frame(width: 44, height: 44)
-                Image(systemName: transaction.type.icon)
-                    .foregroundStyle(transaction.accent)
+                
+                Image(systemName: "pawprint.fill")
+                    .foregroundStyle(transaction.type == .income ? Color.pink : Color.black)
                     .font(.title3)
+                    .rotationEffect(.degrees(transaction.type == .income ? 0 : 180))
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -28,7 +35,7 @@ struct TransactionRow: View {
             VStack(alignment: .trailing, spacing: 4) {
                 Text(transaction.formattedAmount)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(transaction.type == .income ? Color.Mint : Color.Sunset)
+                    .foregroundStyle(transaction.type == .income ? Color.pink : Color.black)
                 Text(transaction.formattedDate)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -44,16 +51,29 @@ struct TransactionRow: View {
 }
 
 #Preview {
-    TransactionRow(
-        transaction: Transaction(
-            title: "Bike to school",
-            subtitle: "Daily reward",
-            date: .now,
-            amount: 5,
-            type: .income,
-            tintName: "OceanBlue"
+    VStack(spacing: 12) {
+        TransactionRow(
+            transaction: Transaction(
+                title: "Bike to school",
+                subtitle: "Daily reward",
+                date: .now,
+                amount: 5,
+                type: .income,
+                tintName: "OceanBlue"
+            )
         )
-    )
+        
+        TransactionRow(
+            transaction: Transaction(
+                title: "Comic Book",
+                subtitle: "Fun purchase",
+                date: .now,
+                amount: 9,
+                type: .expense,
+                tintName: "Sunset"
+            )
+        )
+    }
     .padding()
     .background(Color.Sky)
 }
