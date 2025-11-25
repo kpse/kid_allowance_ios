@@ -114,6 +114,8 @@ class AvatarManager: ObservableObject {
 struct EditableAvatarView: View {
     @StateObject private var avatarManager = AvatarManager()
     @State private var showingActionSheet = false
+    @State private var showPhotoPicker = false
+    @State private var selectedItem: PhotosPickerItem?
     
     let size: CGFloat
     let showEditButton: Bool
@@ -174,19 +176,8 @@ struct EditableAvatarView: View {
             }
         }
         .confirmationDialog("Choose Avatar", isPresented: $showingActionSheet) {
-            PhotosPicker(selection: Binding(
-                get: { nil },
-                set: { newItem in
-                    Task {
-                        if let newItem,
-                           let data = try? await newItem.loadTransferable(type: Data.self),
-                           let image = UIImage(data: data) {
-                            avatarManager.saveAvatar(image)
-                        }
-                    }
-                }
-            ), matching: .images) {
-                Label("Choose from Photos", systemImage: "photo.on.rectangle")
+            Button("Choose from Photos") {
+                showPhotoPicker = true
             }
             
             if avatarManager.avatarImage != nil {
@@ -196,6 +187,16 @@ struct EditableAvatarView: View {
             }
             
             Button("Cancel", role: .cancel) {}
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $selectedItem, matching: .images)
+        .onChange(of: selectedItem) { oldValue, newValue in
+            Task {
+                if let newValue,
+                   let data = try? await newValue.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    avatarManager.saveAvatar(image)
+                }
+            }
         }
     }
 }
