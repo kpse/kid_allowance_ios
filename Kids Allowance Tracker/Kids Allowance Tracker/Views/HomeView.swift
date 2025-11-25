@@ -41,6 +41,12 @@ struct HomeView: View {
             AddTransactionView()
         }
         .navigationBarHidden(true)
+        .onAppear {
+            viewModel.checkForQuestResets()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            viewModel.checkForQuestResets()
+        }
     }
 
     private var header: some View {
@@ -196,20 +202,20 @@ struct HomeView: View {
                 Button {
                     viewModel.completeQuest(title: "Bike to school", amount: 5, tintName: "OceanBlue")
                 } label: {
-                    questRow(title: "Bike to school", reward: "+$5", completed: viewModel.todayCompleted >= 1, tint: .OceanBlue)
+                    questRow(title: "Bike to school", reward: "+$5", completed: viewModel.completedQuests.contains("Bike to school"), tint: .OceanBlue)
                 }
-                .disabled(viewModel.todayCompleted >= 1) // Simple logic: disable if already done enough tasks? Or just let them click.
-                // Actually, logic in ViewModel prevents > total. But let's just disable if this specific one is "done" conceptually.
-                // Since we don't track *which* quest is done, just count, we'll just leave it enabled until total is reached or similar.
-                // For better UX, let's just let them click and see confetti if count < total.
                 
                 Button {
                     viewModel.completeQuest(title: "All homework A", amount: 5, tintName: "Mint")
                 } label: {
-                    questRow(title: "All homework A", reward: "+$5", completed: viewModel.todayCompleted >= 2, tint: .Mint)
+                    questRow(title: "All homework A", reward: "+$5", completed: viewModel.completedQuests.contains("All homework A"), tint: .Mint)
                 }
                 
-                questRow(title: "Room tidy bonus", reward: "+$2", completed: false, tint: .Lavender)
+                Button {
+                    viewModel.completeQuest(title: "Room tidy bonus", amount: 2, tintName: "Lavender")
+                } label: {
+                    questRow(title: "Room tidy bonus", reward: "+$2", completed: viewModel.completedQuests.contains("Room tidy bonus"), tint: .Lavender)
+                }
             }
         }
         .padding(16)
